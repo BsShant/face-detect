@@ -1,0 +1,12 @@
+.image{
+	text-align: center;
+}
+.inner{
+	position: relative;
+	display: inline-block;
+}
+.box{
+	position: absolute;
+	border: 5px red solid;
+	
+}
