@@ -50,7 +50,7 @@ class LogIn extends Component{
 		return(
 		<article>
 		<fieldset>
-		<label>Email:</label>
+		<label>Emaill:</label>
 		<input onChange={this.onEmailChange} type="email" name="email" id="email" placeholder="enter your email"/><br/>
 		<label for="name">Password:</label>
 		<input onChange={this.onPasswordChange} type="password" name="password" placeholder="enter your password"/><br />
