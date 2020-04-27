@@ -123,10 +123,10 @@ class App extends Component{
   return (
   	 
     <div className="App">
-    {this.state.form==='signup' ?
+    {this.state.form=='signup' ?
   	 <LogIn loadUser={this.loadUser} onLogin={this.homePageDisplay} onRegister={this.registerDisplay}/>:
   	 <div>
-  	 {this.state.form==='register' ?
+  	 {this.state.form=='register' ?
   	 <Register loadUser={this.loadUser} onSignUp={this.homePageDisplay}/>:
   	 <div>
     <div className="top">
