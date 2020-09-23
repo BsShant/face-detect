@@ -1,146 +1,162 @@
-import React, {Component} from 'react';
-import Logo from './component/logo/Logo.js';
-import SignIn from './component/signIn/SignIn.js';
-import Input from './component/input/Input.js';
-import Image from './component/image/Image.js';
-import LogIn from './component/login/LogIn.js';
-import Rank from './component/rank/Rank.js';
-import Register from './component/register/Register.js';
+import React, { Component } from 'react';
+import Particles from 'react-particles-js';
+import Clarifai from 'clarifai';
+import FaceRecognition from './components/FaceRecognition/FaceRecognition';
+import Navigation from './components/Navigation/Navigation';
+import Signin from './components/Signin/Signin';
+import Register from './components/Register/Register';
+import Logo from './components/Logo/Logo';
+import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
+import Rank from './components/Rank/Rank';
 import './App.css';
 
+//You must add your own API key here from Clarifai.
+// const app = fetch('https://nameless-earth-38463.herokuapp.com/imageApi',{
+//   method: 'post',
+//   headers: {'Content-Type': 'application/json'},
+//   body: JSON.stringify({
+//     input: this.state.input,
+    
+//   })
+// })
+// const app = new Clarifai.App({
+//  apiKey: 'YOUR_API_HERE'
+// });
 
-
-const initialState={
-	input: '',
-			imageUrl:'',
-			form:'signup',
-			box: {},
-			user:{
-				id: '',
-				name: '',
-				email: '',
-				password: '',
-				entries: 0,
-				date: '',
-			}
+const particlesOptions = {
+  particles: {
+    number: {
+      value: 30,
+      density: {
+        enable: true,
+        value_area: 800
+      }
+    }
+  }
 }
-class App extends Component{
-	constructor(){
-		super();
-		this.state= initialState;
 
-	}
-	
-	loadUser=(data)=>{
-		this.setState({user:{
-				id: data.id,
-				name: data.name,
-				email: data.email,
-				password: data.password,
-				entries: data.entries,
-				date: data.date
-		}})
-		
-	}
-	
-	calculateImageBox=(output)=>{
-		
-		const data= output.outputs[0].data.regions[0].region_info.bounding_box;
-	
-		const image= document.getElementById("image");
-		const height = Number(image.height);
-		const width= Number(image.width);
-		var box = new Object();
-		box.left = data.left_col*width;
-		box.right= width-(data.right_col*width);
-		box.top= data.top_row* height;
-		box.bottom= height-(data.bottom_row*height);
+class App extends Component {
+  constructor() {
+    super();
+    this.state = {
+      input: '',
+      imageUrl: '',
+      box: {},
+      route: 'signin',
+      isSignedIn: false,
+      user: {
+        id: '',
+        name: '',
+        email: '',
+        entries: 0,
+        joined: ''
+      }
+    }
+  }
 
-		return box;
-		
-	
-}
-		
-	setImageBox=(box)=>{
-		
-		this.setState({box : box});
+  loadUser = (data) => {
+    this.setState({user: {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      entries: data.entries,
+      joined: data.joined
+    }})
+  }
 
-	}
-	
-	homePageDisplay=()=>{
-		this.setState({form: 'home'});
-	}
-	signInDisplay=()=>{
-		this.setState(initialState);	
-	}
-	registerDisplay=()=>{
-		this.setState({form: 'register'});
-	}
-	
-	onInputChange= (event) =>{
-		
-		this.setState({input:event.target.value});
-	}
-	onButtonSubmit= () =>{
-		this.setState({imageUrl: this.state.input});
-		fetch('https://nameless-earth-38463.herokuapp.com/imageApi', {
-					method: 'post',
-					headers: {'Content-Type': 'application/json'},
-					body: JSON.stringify({
-						input: this.state.input
-					})
+  calculateFaceLocation = (data) => {
+    console.log(data)
+    const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
+    const image = document.getElementById('inputimage');
+    const width = Number(image.width);
+    const height = Number(image.height);
+    return {
+      leftCol: clarifaiFace.left_col * width,
+      topRow: clarifaiFace.top_row * height,
+      rightCol: width - (clarifaiFace.right_col * width),
+      bottomRow: height - (clarifaiFace.bottom_row * height)
+    }
+  }
 
-				})
-		.then(data=> data.json())
-		.then(response=>{
-			if(response) {
-					fetch('https://nameless-earth-38463.herokuapp.com/image', {
-					method: 'put',
-					headers: {'Content-Type': 'application/json'},
-					body: JSON.stringify({
-						id: this.state.user.id
-					})
+  displayFaceBox = (box) => {
+    console.log(box)
+    this.setState({box: box});
+  }
 
-				})
-				.then(response=> response.json())
-				.then(count=>{
-					this.setState(Object.assign(this.state.user, {entries:count}))
-					console.log(this.state.user.entries);
-				})
-			}
+  onInputChange = (event) => {
+    this.setState({input: event.target.value});
+  }
 
+  onButtonSubmit = () => {
+    this.setState({imageUrl: this.state.input});
+    fetch('https://nameless-earth-38463.herokuapp.com/imageApi',{
+    method: 'post',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+    input: this.state.input,
+    
+      })
+    })
+    .then(data=> data.json())
+      .then(response => {
+        if (response) {
+          fetch('https://nameless-earth-38463.herokuapp.com/image', {
+            method: 'put',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              id: this.state.user.id
+            })
+          })
+            .then(response => response.json())
+            .then(count => {
+              this.setState(Object.assign(this.state.user, { entries: count}))
+            })
 
-			this.setImageBox(
-			this.calculateImageBox(response)
-			)
-		})
-			.catch(err=>console.log(err));
-		    
-		  
-	}
-	
-	render(){
-  return (
-  	 
-    <div className="App">
-    {this.state.form=='signup' ?
-  	 <LogIn loadUser={this.loadUser} onLogin={this.homePageDisplay} onRegister={this.registerDisplay}/>:
-  	 <div>
-  	 {this.state.form=='register' ?
-  	 <Register loadUser={this.loadUser} onSignUp={this.homePageDisplay}/>:
-  	 <div>
-    <div className="top">
-    <Logo />
-    <SignIn onSignOut={this.signInDisplay}/>
-    </div>
-    <Rank name={this.state.user.name} count={this.state.user.entries}/>
-    <Input  onInputChange={this.onInputChange} onButtonSubmit={this.onButtonSubmit}/>
-    <Image box={this.state.box} imageUrl={this.state.imageUrl}/>
-    </div>}
-      </div>}
-    </div>
-  );
-}
+        }
+        this.displayFaceBox(this.calculateFaceLocation(response))
+      })
+      .catch(err => console.log(err));
+  }
+
+  onRouteChange = (route) => {
+    if (route === 'signout') {
+      this.setState({isSignedIn: false})
+    } else if (route === 'home') {
+      this.setState({isSignedIn: true})
+    }
+    this.setState({route: route});
+  }
+
+  render() {
+    const { isSignedIn, imageUrl, route, box } = this.state;
+    return (
+      <div className="App">
+         <Particles className='particles'
+          params={particlesOptions}
+        />
+        <Navigation isSignedIn={isSignedIn} onRouteChange={this.onRouteChange} />
+        { route === 'home'
+          ? <div>
+              <Logo />
+              <Rank
+                name={this.state.user.name}
+                entries={this.state.user.entries}
+              />
+              <ImageLinkForm
+                onInputChange={this.onInputChange}
+                onButtonSubmit={this.onButtonSubmit}
+              />
+              <FaceRecognition box={box} imageUrl={imageUrl} />
+            </div>
+          : (
+             route === 'signin'
+             ? <Signin loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
+             : <Register loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
+            )
+        }
+      </div>
+    );
+  }
 }
 
 export default App;
